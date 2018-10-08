@@ -3,7 +3,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: rocketmq-operator-config
-  namespace: rocketmq-operator
+  namespace: kube-system
   labels:
     app: rocketmq-operator
     release: "0.1"
@@ -11,11 +11,11 @@ data:
   operator-config.yaml: |
     #namespace: rocketmq-operator
 ---
-apiVersion: apps/v1
+apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: rocketmq-operator
-  namespace: rocketmq-operator
+  namespace: kube-system
   labels:
     release: "0.1"
     app: rocketmq-operator
@@ -30,15 +30,13 @@ spec:
         app: rocketmq-operator
     spec:
       serviceAccountName: rocketmq-operator
-      nodeSelector:
-        rocketmq-operator: "on"
       volumes:
         - name: rocketmq-operator-config-volume
           configMap:
             name: rocketmq-operator-config
       containers:
       - name: rocketmq-operator-controller
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         image: huanwei/rocketmq-operator:0.1
         ports:
         - containerPort: 10254
@@ -47,4 +45,4 @@ spec:
           mountPath: /etc/rocketmq-operator
         args:
           - --v=4
-          - --namespace=rocketmq-operator
+          - --namespace=kube-system
