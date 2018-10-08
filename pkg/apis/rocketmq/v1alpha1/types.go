@@ -21,6 +21,7 @@ import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 type BrokerClusterSpec struct {
 	BrokerImage         string                        `json:"brokerImage"`
+	ClusterName         string                        `json:"clusterName"`
 	NameServers         string                        `json:"nameServers"`
 	AllMaster           bool                          `json:"allMaster`
 	ReplicationMode     string                        `json:"replicationMode`

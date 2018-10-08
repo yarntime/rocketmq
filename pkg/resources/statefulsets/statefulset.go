@@ -159,6 +159,10 @@ func brokerContainer(cluster *v1alpha1.BrokerCluster, index int) v1.Container {
 				Name:  "NAMESRV_ADDRESS",
 				Value: cluster.Spec.NameServers,
 			},
+			{
+				Name:  "CLUSTER_NAME",
+				Value: cluster.Spec.ClusterName,
+			},
 		},
 		Command: []string{"./brokerStart.sh"},
 		VolumeMounts: []v1.VolumeMount{
