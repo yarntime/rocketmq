@@ -70,7 +70,7 @@ func Run(s *operatoropts.OperatorOpts) error {
 		opClient,
 		kubeClient,
 		operatorInformerFactory.ROCKETMQ().V1alpha1().BrokerClusters(),
-		kubeInformerFactory.Apps().V1().StatefulSets(),
+		kubeInformerFactory.Apps().V1beta1().StatefulSets(),
 		kubeInformerFactory.Core().V1().Pods(),
 		kubeInformerFactory.Core().V1().Services(),
 		30*time.Second,

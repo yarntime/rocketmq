@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"github.com/huanwei/rocketmq-operator/pkg/apis/rocketmq/v1alpha1"
 	"github.com/huanwei/rocketmq-operator/pkg/constants"
-	apps "k8s.io/api/apps/v1"
+	apps "k8s.io/api/apps/v1beta1"
 	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
