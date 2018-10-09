@@ -24,8 +24,8 @@ build: prereq
 package:
 	@echo '--> packaging...'
 	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -a -o build/bin/${APP} ./cmd/rocketmq-operator/
-	@docker build -t huanwei/${APP}:${VERSION} .
+	@docker build -t rivernet/${APP}:${VERSION} .
 
 deploy: package
 	@echo '--> deploying...'
-	@docker push huanwei/${APP}:${VERSION}
+	@docker push rivernet/${APP}:${VERSION}
