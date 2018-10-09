@@ -22,6 +22,7 @@ function create_config() {
     echo "brokerClusterName=$CLUSTER_NAME" >> $BROKER_CONFIG_FILE
     echo "brokerName=$BROKER_NAME" >> $BROKER_CONFIG_FILE
     echo "brokerId=$BROKER_ID" >> $BROKER_CONFIG_FILE
+    echo "storePathRootDir=/opt/store" >> $BROKER_CONFIG_FILE
     echo "deleteWhen=$DELETE_WHEN" >> $BROKER_CONFIG_FILE
     echo "fileReservedTime=$FILE_RESERVED_TIME" >> $BROKER_CONFIG_FILE
     echo "brokerRole=$BROKER_ROLE" >> $BROKER_CONFIG_FILE
