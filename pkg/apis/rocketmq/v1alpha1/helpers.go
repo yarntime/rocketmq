@@ -17,7 +17,9 @@ limitations under the License.
 package v1alpha1
 
 const (
-	defaultBrokerImage     = "huanwei/rocketmq-broker:4.3.0-operator"
+	defaultBrokerImage     = "rivernet/rocketmq-broker:4.3.0-operator"
+	defaultNameSvrImage    = "rivernet/rocketmq-namesrv:4.3.0-k8s"
+	defaultPullPolicy      = "IfNotPresent"
 	defaultGroups          = 2
 	defaultMembersPerGroup = 2
 
@@ -34,6 +36,12 @@ const (
 func (c *BrokerCluster) EnsureDefaults() *BrokerCluster {
 	if c.Spec.BrokerImage == "" {
 		c.Spec.BrokerImage = defaultBrokerImage
+	}
+	if c.Spec.NameSvrImage == "" {
+		c.Spec.NameSvrImage = defaultNameSvrImage
+	}
+	if c.Spec.ImagePullPolicy == "" {
+		c.Spec.ImagePullPolicy = defaultPullPolicy
 	}
 	if c.Spec.GroupReplica == 0 {
 		c.Spec.GroupReplica = defaultGroups

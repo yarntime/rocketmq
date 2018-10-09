@@ -22,12 +22,67 @@ import (
 	"github.com/huanwei/rocketmq-operator/pkg/constants"
 	apps "k8s.io/api/apps/v1beta1"
 	"k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"strconv"
 )
 
-func NewStatefulSet(cluster *v1alpha1.BrokerCluster, index int) *apps.StatefulSet {
+func NewNameSvrStatefulSet(cluster *v1alpha1.BrokerCluster) *apps.StatefulSet {
+	containers := []v1.Container{
+		nameSvrContainer(cluster),
+	}
+
+	labels := map[string]string{
+		constants.BrokerClusterLabel: fmt.Sprintf(cluster.Name + `-ns`),
+		"Release":                    cluster.Name,
+	}
+	ssReplicas := int32(cluster.Spec.NameSvrReplica)
+	ss := &apps.StatefulSet{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: cluster.Namespace,
+			Name:      fmt.Sprintf(cluster.Name + `-ns`),
+			OwnerReferences: []metav1.OwnerReference{
+				*metav1.NewControllerRef(cluster, schema.GroupVersionKind{
+					Group:   v1alpha1.SchemeGroupVersion.Group,
+					Version: v1alpha1.SchemeGroupVersion.Version,
+					Kind:    v1alpha1.ClusterCRDResourceKind,
+				}),
+			},
+			Labels: labels,
+		},
+		Spec: apps.StatefulSetSpec{
+			Replicas: &ssReplicas,
+			Selector: &metav1.LabelSelector{
+				MatchLabels: labels,
+			},
+			Template: v1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: labels,
+				},
+				Spec: v1.PodSpec{
+					//ServiceAccountName: "rocketmq-operator",
+					NodeSelector: cluster.Spec.NodeSelector,
+					//Affinity:     cluster.Spec.Affinity,
+					Containers: containers,
+				},
+			},
+			ServiceName: fmt.Sprintf(cluster.Name + `-ns-svc`),
+		},
+	}
+	if cluster.Spec.NameSvrStorage != nil {
+		ss.Spec.VolumeClaimTemplates = []v1.PersistentVolumeClaim{NewPersistentVolumeClaim(cluster.Spec.NameSvrStorage, labels)}
+		ss.Spec.Template.Spec.Containers[0].VolumeMounts = []v1.VolumeMount{
+			{
+				Name:      "data",
+				MountPath: "/opt/store",
+			},
+		}
+	}
+	return ss
+}
+
+func NewBrokerStatefulSet(cluster *v1alpha1.BrokerCluster, index int) *apps.StatefulSet {
 	containers := []v1.Container{
 		brokerContainer(cluster, index),
 	}
@@ -36,30 +91,11 @@ func NewStatefulSet(cluster *v1alpha1.BrokerCluster, index int) *apps.StatefulSe
 	if index == 0 {
 		brokerRole = constants.BrokerRoleMaster
 	}
-	podLabels := map[string]string{
+	labels := map[string]string{
 		constants.BrokerClusterLabel: fmt.Sprintf(cluster.Name+`-%d`, index),
 		constants.BrokerRoleLabel:    brokerRole,
+		"Release":                    cluster.Name,
 	}
-
-	/*var podVolumes = []v1.Volume{}
-	if cluster.Spec.VolumeClaimTemplate == nil {
-		podVolumes = append(podVolumes, v1.Volume{
-			Name: "brokeroptlogs",
-			VolumeSource: v1.VolumeSource{
-				EmptyDir: &v1.EmptyDirVolumeSource{
-					Medium: "",
-				},
-			},
-		})
-		podVolumes = append(podVolumes, v1.Volume{
-			Name: "brokeroptstore",
-			VolumeSource: v1.VolumeSource{
-				EmptyDir: &v1.EmptyDirVolumeSource{
-					Medium: "",
-				},
-			},
-		})
-	}*/
 
 	ssReplicas := int32(cluster.Spec.MembersPerGroup)
 	ss := &apps.StatefulSet{
@@ -73,54 +109,78 @@ func NewStatefulSet(cluster *v1alpha1.BrokerCluster, index int) *apps.StatefulSe
 					Kind:    v1alpha1.ClusterCRDResourceKind,
 				}),
 			},
-			Labels: podLabels,
+			Labels: labels,
 		},
 		Spec: apps.StatefulSetSpec{
 			Replicas: &ssReplicas,
 			Selector: &metav1.LabelSelector{
-				MatchLabels: podLabels,
+				MatchLabels: labels,
 			},
 			Template: v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: podLabels,
+					Labels: labels,
 				},
 				Spec: v1.PodSpec{
 					//ServiceAccountName: "rocketmq-operator",
 					NodeSelector: cluster.Spec.NodeSelector,
 					//Affinity:     cluster.Spec.Affinity,
 					Containers: containers,
-					//Volumes: podVolumes,
-					Volumes: []v1.Volume{
-						{
-							Name: "brokeroptlogs",
-							VolumeSource: v1.VolumeSource{
-								HostPath: &v1.HostPathVolumeSource{
-									Path: fmt.Sprintf("/data/broker/logs/%d", index),
-								},
-							},
-						},
-						{
-							Name: "brokeroptstore",
-							VolumeSource: v1.VolumeSource{
-								HostPath: &v1.HostPathVolumeSource{
-									Path: fmt.Sprintf("/data/broker/store/%d", index),
-								},
-							},
-						},
-					},
 				},
 			},
 			ServiceName: fmt.Sprintf(cluster.Name+`-svc-%d`, index),
 		},
 	}
+	if cluster.Spec.BrokerStorage != nil {
+		ss.Spec.VolumeClaimTemplates = []v1.PersistentVolumeClaim{NewPersistentVolumeClaim(cluster.Spec.BrokerStorage, labels)}
+		ss.Spec.Template.Spec.Containers[0].VolumeMounts = []v1.VolumeMount{
+			{
+				Name:      "data",
+				MountPath: "/opt/store",
+			},
+		}
+	}
 	return ss
+}
 
+func NewPersistentVolumeClaim(storage *v1alpha1.Storage, labels map[string]string) v1.PersistentVolumeClaim {
+	volumeSize, _ := resource.ParseQuantity(storage.DataDiskSize)
+	return v1.PersistentVolumeClaim{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:   "data",
+			Labels: labels,
+		},
+		Spec: v1.PersistentVolumeClaimSpec{
+			StorageClassName: storage.StorageClass,
+			AccessModes: []v1.PersistentVolumeAccessMode{
+				v1.ReadWriteOnce,
+			},
+			FastMode: storage.FastMode,
+			Resources: v1.ResourceRequirements{
+				Requests: v1.ResourceList{
+					v1.ResourceStorage: volumeSize,
+				},
+			},
+		},
+	}
+}
+
+func nameSvrContainer(cluster *v1alpha1.BrokerCluster) v1.Container {
+	return v1.Container{
+		Name:            "nameserver",
+		ImagePullPolicy: v1.PullPolicy(cluster.Spec.ImagePullPolicy),
+		Image:           cluster.Spec.NameSvrImage,
+		Ports: []v1.ContainerPort{
+			{
+				ContainerPort: 9876,
+			},
+		},
+	}
 }
 
 func brokerContainer(cluster *v1alpha1.BrokerCluster, index int) v1.Container {
 	return v1.Container{
 		Name:            "broker",
-		ImagePullPolicy: "Always",
+		ImagePullPolicy: v1.PullPolicy(cluster.Spec.ImagePullPolicy),
 		Image:           cluster.Spec.BrokerImage,
 		Ports: []v1.ContainerPort{
 			{
@@ -161,20 +221,9 @@ func brokerContainer(cluster *v1alpha1.BrokerCluster, index int) v1.Container {
 			},
 			{
 				Name:  "CLUSTER_NAME",
-				Value: cluster.Spec.ClusterName,
+				Value: cluster.Name,
 			},
 		},
 		Command: []string{"./brokerStart.sh"},
-		VolumeMounts: []v1.VolumeMount{
-			{
-				Name:      "brokeroptlogs",
-				MountPath: "/opt/logs",
-			},
-			{
-				Name:      "brokeroptstore",
-				MountPath: "/opt/store",
-			},
-		},
 	}
-
 }

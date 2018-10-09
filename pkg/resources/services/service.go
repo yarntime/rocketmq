@@ -25,6 +25,16 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
+func NewNameSvrHeadlessService(cluster *v1alpha1.BrokerCluster) *corev1.Service {
+	var ports []corev1.ServicePort
+	ports = append(ports, corev1.ServicePort{
+		Port: 9876,
+		Name: "port9876",
+	})
+	svc := NewService(ports, fmt.Sprintf(cluster.Name+`-ns-svc`), fmt.Sprintf(cluster.Name+`-ns`), cluster)
+	return svc
+}
+
 func NewHeadlessService(cluster *v1alpha1.BrokerCluster, index int) *corev1.Service {
 	var ports []corev1.ServicePort
 	ports = append(ports, corev1.ServicePort{
@@ -35,13 +45,17 @@ func NewHeadlessService(cluster *v1alpha1.BrokerCluster, index int) *corev1.Serv
 		Port: 10911,
 		Name: "port10911",
 	})
-	svc := &corev1.Service{
+	svc := NewService(ports, fmt.Sprintf(cluster.Name+`-svc-%d`, index), fmt.Sprintf(cluster.Name+`-%d`, index), cluster)
+	return svc
+}
+
+func NewService(ports []corev1.ServicePort, name string, labelName string, cluster *v1alpha1.BrokerCluster) *corev1.Service {
+	return &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			//Labels:    map[string]string{constants.BrokerClusterLabel: cluster.Name},
-			//Name:      cluster.Name,
-			Name: fmt.Sprintf(cluster.Name+`-svc-%d`, index),
+			Name: name,
 			Labels: map[string]string{
-				constants.BrokerClusterLabel: fmt.Sprintf(cluster.Name+`-%d`, index),
+				constants.BrokerClusterLabel: labelName,
+				"Release":                    cluster.Name,
 			},
 			Namespace: cluster.Namespace,
 			OwnerReferences: []metav1.OwnerReference{
@@ -55,10 +69,9 @@ func NewHeadlessService(cluster *v1alpha1.BrokerCluster, index int) *corev1.Serv
 		Spec: corev1.ServiceSpec{
 			Ports: ports,
 			Selector: map[string]string{
-				constants.BrokerClusterLabel: fmt.Sprintf(cluster.Name+`-%d`, index),
+				constants.BrokerClusterLabel: labelName,
 			},
 			ClusterIP: corev1.ClusterIPNone,
 		},
 	}
-	return svc
 }

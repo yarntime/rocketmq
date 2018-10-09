@@ -315,6 +315,27 @@ func (m *BrokerController) syncHandler(key string) error {
 	//todo: validate cluster, update cluster labels
 
 	// sync cluster
+
+	// create nameserver
+	nameSvrSvc, err := m.serviceLister.Services(cluster.Namespace).Get(fmt.Sprintf(cluster.Name + `-ns-svc`))
+	if apierrors.IsNotFound(err) {
+		glog.V(2).Infof("Creating a new Service for cluster %q", nsName)
+		nameSvrSvc = services.NewNameSvrHeadlessService(cluster)
+		err = m.serviceControl.CreateService(nameSvrSvc)
+	}
+	nameSvrSs, err := m.statefulSetLister.StatefulSets(cluster.Namespace).Get(fmt.Sprintf(cluster.Name + `-ns`))
+	if apierrors.IsNotFound(err) {
+		glog.V(2).Infof("Creating a new StatefulSet for cluster %q", nsName)
+		nameSvrSs = statefulsets.NewNameSvrStatefulSet(cluster)
+		err = m.statefulSetControl.CreateStatefulSet(nameSvrSs)
+	}
+
+	nameSvrAddress := ""
+	for index := int32(0); index < *nameSvrSs.Spec.Replicas; index++ {
+		nameSvrAddress += fmt.Sprintf(cluster.Name+`-%d`+`.`+cluster.Name+`-ns-svc`, index)
+	}
+	cluster.Spec.NameServers = nameSvrAddress
+
 	groupReplica := int(cluster.Spec.GroupReplica)
 	for index := 0; index < groupReplica; index++ {
 		svc, err := m.serviceLister.Services(cluster.Namespace).Get(fmt.Sprintf(cluster.Name+`-svc-%d`, index))
@@ -361,7 +382,7 @@ func (m *BrokerController) syncHandler(key string) error {
 		// If the resource doesn't exist, we'll create it
 		if apierrors.IsNotFound(err) {
 			glog.V(2).Infof("Creating a new StatefulSet for cluster %q", nsName)
-			ss = statefulsets.NewStatefulSet(cluster, index)
+			ss = statefulsets.NewBrokerStatefulSet(cluster, index)
 			err = m.statefulSetControl.CreateStatefulSet(ss)
 		}
 		// If an error occurs during Get/Create, we'll requeue the item so we can
@@ -387,7 +408,7 @@ func (m *BrokerController) syncHandler(key string) error {
 			glog.V(4).Infof("Updating %q: membersPerGroup=%d statefulSetReplicas=%d",
 				nsName, cluster.Spec.MembersPerGroup, ss.Spec.Replicas)
 			old := ss.DeepCopy()
-			ss = statefulsets.NewStatefulSet(cluster, index)
+			ss = statefulsets.NewBrokerStatefulSet(cluster, index)
 			if err := m.statefulSetControl.Patch(old, ss); err != nil {
 				// Requeue the item so we can attempt processing again later.
 				// This could have been caused by a temporary network failure etc.

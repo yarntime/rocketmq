@@ -20,18 +20,28 @@ import corev1 "k8s.io/api/core/v1"
 import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 type BrokerClusterSpec struct {
-	BrokerImage         string                        `json:"brokerImage"`
-	ClusterName         string                        `json:"clusterName"`
-	NameServers         string                        `json:"nameServers"`
-	AllMaster           bool                          `json:"allMaster`
-	ReplicationMode     string                        `json:"replicationMode`
-	GroupReplica        int32                         `json:"groupReplica, omitempty"`
-	MembersPerGroup     int32                         `json:"membersPerGroup, omitempty"`
-	Properties          map[string]string             `json:"properties, omitempty"`
-	NodeSelector        map[string]string             `json:"nodeSelector, omitempty"`
-	Affinity            *corev1.Affinity              `json:"affinity, omitempty"`
-	VolumeClaimTemplate *corev1.PersistentVolumeClaim `json:"volumeClaimTemplate, omitempty"`
-	Config              *corev1.LocalObjectReference  `json:"config,omitempty"`
+	BrokerImage     string                       `json:"brokerImage"`
+	NameSvrImage    string                       `json:"nameSvrImage"`
+	ImagePullPolicy string                       `json:"imagePullPolicy"`
+	AllMaster       bool                         `json:"allMaster`
+	ReplicationMode string                       `json:"replicationMode`
+	NameSvrReplica  int32                        `json:"nameSrvReplica, omitempty"`
+	GroupReplica    int32                        `json:"groupReplica, omitempty"`
+	MembersPerGroup int32                        `json:"membersPerGroup, omitempty"`
+	Properties      map[string]string            `json:"properties, omitempty"`
+	NodeSelector    map[string]string            `json:"nodeSelector, omitempty"`
+	Affinity        *corev1.Affinity             `json:"affinity, omitempty"`
+	NameSvrStorage  *Storage                     `json:"nameSvrStorage,omitempty"`
+	BrokerStorage   *Storage                     `json:"brokerStorage, omitempty"`
+	Config          *corev1.LocalObjectReference `json:"config,omitempty"`
+	NameServers     string                       `json:"nameServers"`
+}
+
+type Storage struct {
+	UseExternalDisk bool    `json:"useExternalDisk"`
+	DataDiskSize    string  `json:"dataDiskSize"`
+	StorageClass    *string `json:"storageClass"`
+	FastMode        bool    `json:"fastMode"`
 }
 
 type BrokerClusterConditionType string
