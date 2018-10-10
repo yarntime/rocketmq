@@ -1,13 +1,13 @@
 ---
-apiVersion: "rocketmq.huanwei.io/v1alpha1"
+apiVersion: "rocketmq.rivernet.io/v1alpha1"
 kind: BrokerCluster
 metadata:
   name: mybrokercluster
-  namespace : rocketmq-operator
+  namespace : default
 spec:
-  brokerImage: huanwei/rocketmq-broker:4.3.0-operator
-  nameServers: 10.10.103.181:9876;10.10.101.98:9876
+  brokerImage: rivernet/rocketmq-broker:4.3.0-operator
   allMaster: true
   replicationMode: SYNC
+  nameSrvReplica: 2
   groupReplica: 2
   membersPerGroup: 2
