@@ -54,6 +54,8 @@ import (
 	operatoropts "github.com/huanwei/rocketmq-operator/pkg/options"
 	services "github.com/huanwei/rocketmq-operator/pkg/resources/services"
 	statefulsets "github.com/huanwei/rocketmq-operator/pkg/resources/statefulsets"
+	brokerinformers "github.com/huanwei/rocketmq-operator/pkg/generated/informers/externalversions"
+	"github.com/huanwei/rocketmq-operator/pkg/garbagecollector"
 )
 
 const controllerAgentName = "rocketmq-operator"
@@ -130,6 +132,8 @@ type BrokerController struct {
 	// recorder is an event recorder for recording Event resources to the
 	// Kubernetes API.
 	recorder record.EventRecorder
+
+	GC         garbagecollector.Interface
 }
 
 // NewBrokerController creates a new BrokerController.
@@ -152,6 +156,8 @@ func NewBrokerController(
 	eventBroadcaster.StartLogging(glog.Infof)
 	eventBroadcaster.StartRecordingToSink(&typedcorev1.EventSinkImpl{Interface: kubeClient.CoreV1().Events("")})
 	recorder := eventBroadcaster.NewRecorder(scheme.Scheme, corev1.EventSource{Component: controllerAgentName})
+
+	brokerInformerFactory := brokerinformers.NewSharedInformerFactory(opClient, time.Second*30)
 
 	m := BrokerController{
 		opConfig: opConfig,
@@ -177,6 +183,8 @@ func NewBrokerController(
 
 		queue:    workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "brokercluster"),
 		recorder: recorder,
+
+		GC:                   garbagecollector.NewGarbageCollector(opClient, kubeClient, brokerInformerFactory),
 	}
 
 	clusterInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
@@ -236,6 +244,9 @@ func (m *BrokerController) Run(ctx context.Context, threadiness int) {
 		return
 	}
 
+	glog.Info("Starting garbage collector")
+	m.runGC(ctx.Done())
+
 	glog.Info("Starting Cluster controller workers")
 	// Launch two workers to process Foo resources
 	for i := 0; i < threadiness; i++ {
@@ -245,6 +256,19 @@ func (m *BrokerController) Run(ctx context.Context, threadiness int) {
 	glog.Info("Started Cluster controller workers")
 	defer glog.Info("Shutting down Cluster controller workers")
 	<-ctx.Done()
+}
+
+func (m *BrokerController) runGC(stop <-chan struct{}) {
+	go func() {
+		wait.Until(func() {
+			err := m.GC.CollectBrokerClusterGarbage()
+			if err != nil {
+				glog.Errorf("collecting brokercluster statefulset and services: %v", err)
+			}
+		}, garbagecollector.Interval, stop)
+		// run garbage collection before stopping the process
+		m.GC.CollectBrokerClusterGarbage()
+	}()
 }
 
 // worker runs a worker goroutine that invokes processNextWorkItem until the
