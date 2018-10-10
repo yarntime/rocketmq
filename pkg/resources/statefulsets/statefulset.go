@@ -35,6 +35,7 @@ func NewNameSvrStatefulSet(cluster *v1alpha1.BrokerCluster) *apps.StatefulSet {
 
 	labels := map[string]string{
 		constants.BrokerClusterLabel: fmt.Sprintf(cluster.Name + `-ns`),
+		constants.BrockerClusterName: cluster.Name,
 		"Release":                    cluster.Name,
 	}
 	ssReplicas := int32(cluster.Spec.NameSvrReplica)

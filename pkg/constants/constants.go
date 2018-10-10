@@ -16,11 +16,12 @@ limitations under the License.
 
 package constants
 
-const BrokerClusterLabel = "v1alpha1.rocketmq.huanwei.io/cluster"
+const BrokerClusterLabel = "v1alpha1.rocketmq.rivernet.io/cluster"
+const BrockerClusterName = "v1alpha1.rocketmq.rivernet.io/clustername"
 
 //const BrokerLabel  = "app"
 
-const BrokerRoleLabel = "v1alpha1.rocketmq.huanwei.io/role"
+const BrokerRoleLabel = "v1alpha1.rocketmq.rivernet.io/role"
 
 const BrokerRoleMaster = "master"
 
