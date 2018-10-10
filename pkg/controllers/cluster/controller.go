@@ -317,13 +317,13 @@ func (m *BrokerController) syncHandler(key string) error {
 	// sync cluster
 
 	// create nameserver
-	nameSvrSvc, err := m.serviceLister.Services(cluster.Namespace).Get(fmt.Sprintf(cluster.Name + `-ns-svc`))
+	nameSvrSvc, err := m.serviceLister.Services(cluster.Namespace).Get(fmt.Sprintf(cluster.Name+`-ns-svc`))
 	if apierrors.IsNotFound(err) {
 		glog.V(2).Infof("Creating a new Service for cluster %q", nsName)
 		nameSvrSvc = services.NewNameSvrHeadlessService(cluster)
 		err = m.serviceControl.CreateService(nameSvrSvc)
 	}
-	nameSvrSs, err := m.statefulSetLister.StatefulSets(cluster.Namespace).Get(fmt.Sprintf(cluster.Name + `-ns`))
+	nameSvrSs, err := m.kubeClient.AppsV1beta1().StatefulSets(cluster.Namespace).Get(fmt.Sprintf(cluster.Name+`-ns`), metav1.GetOptions{})
 	if apierrors.IsNotFound(err) {
 		glog.V(2).Infof("Creating a new StatefulSet for cluster %q", nsName)
 		nameSvrSs = statefulsets.NewNameSvrStatefulSet(cluster)
@@ -332,9 +332,9 @@ func (m *BrokerController) syncHandler(key string) error {
 
 	nameSvrAddress := ""
 	for index := int32(0); index < *nameSvrSs.Spec.Replicas; index++ {
-		nameSvrAddress += fmt.Sprintf(cluster.Name+`-%d`+`.`+cluster.Name+`-ns-svc`, index)
+		nameSvrAddress += fmt.Sprintf(cluster.Name + `-ns-%d` + `.` + cluster.Name + `-ns-svc:9876;`, index)
 	}
-	cluster.Spec.NameServers = nameSvrAddress
+	cluster.Spec.NameServers = nameSvrAddress[0:len(nameSvrAddress) - 1]
 
 	groupReplica := int(cluster.Spec.GroupReplica)
 	for index := 0; index < groupReplica; index++ {
@@ -378,7 +378,7 @@ func (m *BrokerController) syncHandler(key string) error {
 	readyGroups := 0
 	readyMembers := 0
 	for index := 0; index < groupReplica; index++ {
-		ss, err := m.statefulSetLister.StatefulSets(cluster.Namespace).Get(fmt.Sprintf(cluster.Name+`-%d`, index))
+		ss, err := m.kubeClient.AppsV1beta1().StatefulSets(cluster.Namespace).Get(fmt.Sprintf(cluster.Name+`-%d`, index), metav1.GetOptions{})
 		// If the resource doesn't exist, we'll create it
 		if apierrors.IsNotFound(err) {
 			glog.V(2).Infof("Creating a new StatefulSet for cluster %q", nsName)

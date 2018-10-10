@@ -38,9 +38,9 @@ type BrokerClusterSpec struct {
 }
 
 type Storage struct {
-	DataDiskSize string  `json:"dataDiskSize"`
-	StorageClass *string `json:"storageClass"`
-	FastMode     bool    `json:"fastMode"`
+	DataDiskSize    string  `json:"dataDiskSize"`
+	StorageClass    *string `json:"storageClass"`
+	FastMode        bool    `json:"fastMode"`
 }
 
 type BrokerClusterConditionType string

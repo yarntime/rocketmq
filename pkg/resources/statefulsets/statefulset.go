@@ -22,10 +22,10 @@ import (
 	"github.com/huanwei/rocketmq-operator/pkg/constants"
 	apps "k8s.io/api/apps/v1beta1"
 	"k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"strconv"
+	"k8s.io/apimachinery/pkg/api/resource"
 )
 
 func NewNameSvrStatefulSet(cluster *v1alpha1.BrokerCluster) *apps.StatefulSet {
@@ -34,15 +34,15 @@ func NewNameSvrStatefulSet(cluster *v1alpha1.BrokerCluster) *apps.StatefulSet {
 	}
 
 	labels := map[string]string{
-		constants.BrokerClusterLabel: fmt.Sprintf(cluster.Name + `-ns`),
+		constants.BrokerClusterLabel: fmt.Sprintf(cluster.Name+`-ns`),
 		constants.BrockerClusterName: cluster.Name,
-		"Release":                    cluster.Name,
+		"Release": cluster.Name,
 	}
 	ssReplicas := int32(cluster.Spec.NameSvrReplica)
 	ss := &apps.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: cluster.Namespace,
-			Name:      fmt.Sprintf(cluster.Name + `-ns`),
+			Name:      fmt.Sprintf(cluster.Name+`-ns`),
 			OwnerReferences: []metav1.OwnerReference{
 				*metav1.NewControllerRef(cluster, schema.GroupVersionKind{
 					Group:   v1alpha1.SchemeGroupVersion.Group,
@@ -68,7 +68,7 @@ func NewNameSvrStatefulSet(cluster *v1alpha1.BrokerCluster) *apps.StatefulSet {
 					Containers: containers,
 				},
 			},
-			ServiceName: fmt.Sprintf(cluster.Name + `-ns-svc`),
+			ServiceName: fmt.Sprintf(cluster.Name+`-ns-svc`),
 		},
 	}
 	if cluster.Spec.NameSvrStorage != nil {
@@ -94,8 +94,9 @@ func NewBrokerStatefulSet(cluster *v1alpha1.BrokerCluster, index int) *apps.Stat
 	}
 	labels := map[string]string{
 		constants.BrokerClusterLabel: fmt.Sprintf(cluster.Name+`-%d`, index),
+		constants.BrockerClusterName: cluster.Name,
 		constants.BrokerRoleLabel:    brokerRole,
-		"Release":                    cluster.Name,
+		"Release": cluster.Name,
 	}
 
 	ssReplicas := int32(cluster.Spec.MembersPerGroup)
@@ -221,7 +222,7 @@ func brokerContainer(cluster *v1alpha1.BrokerCluster, index int) v1.Container {
 				Value: cluster.Spec.NameServers,
 			},
 			{
-				Name:  "CLUSTER_NAME",
+				Name: "CLUSTER_NAME",
 				Value: cluster.Name,
 			},
 		},
