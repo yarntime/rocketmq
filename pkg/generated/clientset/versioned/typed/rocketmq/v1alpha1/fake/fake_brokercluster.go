@@ -19,13 +19,13 @@ limitations under the License.
 package fake
 
 import (
-	v1alpha1 "github.com/huanwei/rocketmq-operator/pkg/apis/rocketmq/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	testing "k8s.io/client-go/testing"
+	v1alpha1 "k8s.io/rocketmq-operator/pkg/apis/rocketmq/v1alpha1"
 )
 
 // FakeBrokerClusters implements BrokerClusterInterface
@@ -62,7 +62,7 @@ func (c *FakeBrokerClusters) List(opts v1.ListOptions) (result *v1alpha1.BrokerC
 	if label == nil {
 		label = labels.Everything()
 	}
-	list := &v1alpha1.BrokerClusterList{ListMeta: obj.(*v1alpha1.BrokerClusterList).ListMeta}
+	list := &v1alpha1.BrokerClusterList{}
 	for _, item := range obj.(*v1alpha1.BrokerClusterList).Items {
 		if label.Matches(labels.Set(item.Labels)) {
 			list.Items = append(list.Items, item)

@@ -21,20 +21,24 @@ package fake
 import (
 	rest "k8s.io/client-go/rest"
 	testing "k8s.io/client-go/testing"
-	v1alpha1 "k8s.io/kubernetes/pkg/client/clientset_generated/versioned/typed/rocketmq/v1alpha1"
+	v1 "k8s.io/kubernetes/pkg/client/clientset_generated/versioned/typed/example/v1"
 )
 
-type FakeROCKETMQV1alpha1 struct {
+type FakeExampleV1 struct {
 	*testing.Fake
 }
 
-func (c *FakeROCKETMQV1alpha1) BrokerClusters(namespace string) v1alpha1.BrokerClusterInterface {
-	return &FakeBrokerClusters{c, namespace}
+func (c *FakeExampleV1) ClusterTestTypes() v1.ClusterTestTypeInterface {
+	return &FakeClusterTestTypes{c}
+}
+
+func (c *FakeExampleV1) TestTypes(namespace string) v1.TestTypeInterface {
+	return &FakeTestTypes{c, namespace}
 }
 
 // RESTClient returns a RESTClient that is used to communicate
 // with API server by this client implementation.
-func (c *FakeROCKETMQV1alpha1) RESTClient() rest.Interface {
+func (c *FakeExampleV1) RESTClient() rest.Interface {
 	var ret *rest.RESTClient
 	return ret
 }

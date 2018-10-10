@@ -19,14 +19,14 @@ limitations under the License.
 package fake
 
 import (
-	clientset "github.com/huanwei/rocketmq-operator/pkg/generated/clientset/versioned"
-	rocketmqv1alpha1 "github.com/huanwei/rocketmq-operator/pkg/generated/clientset/versioned/typed/rocketmq/v1alpha1"
-	fakerocketmqv1alpha1 "github.com/huanwei/rocketmq-operator/pkg/generated/clientset/versioned/typed/rocketmq/v1alpha1/fake"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/discovery"
 	fakediscovery "k8s.io/client-go/discovery/fake"
 	"k8s.io/client-go/testing"
+	clientset "k8s.io/kubernetes/pkg/client/clientset_generated/versioned"
+	rocketmqv1alpha1 "k8s.io/kubernetes/pkg/client/clientset_generated/versioned/typed/rocketmq/v1alpha1"
+	fakerocketmqv1alpha1 "k8s.io/kubernetes/pkg/client/clientset_generated/versioned/typed/rocketmq/v1alpha1/fake"
 )
 
 // NewSimpleClientset returns a clientset that will respond with the provided objects.
@@ -41,20 +41,11 @@ func NewSimpleClientset(objects ...runtime.Object) *Clientset {
 		}
 	}
 
-	cs := &Clientset{}
-	cs.discovery = &fakediscovery.FakeDiscovery{Fake: &cs.Fake}
-	cs.AddReactor("*", "*", testing.ObjectReaction(o))
-	cs.AddWatchReactor("*", func(action testing.Action) (handled bool, ret watch.Interface, err error) {
-		gvr := action.GetResource()
-		ns := action.GetNamespace()
-		watch, err := o.Watch(gvr, ns)
-		if err != nil {
-			return false, nil, err
-		}
-		return true, watch, nil
-	})
+	fakePtr := testing.Fake{}
+	fakePtr.AddReactor("*", "*", testing.ObjectReaction(o))
+	fakePtr.AddWatchReactor("*", testing.DefaultWatchReactor(watch.NewFake(), nil))
 
-	return cs
+	return &Clientset{fakePtr, &fakediscovery.FakeDiscovery{Fake: &fakePtr}}
 }
 
 // Clientset implements clientset.Interface. Meant to be embedded into a
