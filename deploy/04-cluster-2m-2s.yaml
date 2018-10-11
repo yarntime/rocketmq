@@ -2,7 +2,7 @@
 apiVersion: "rocketmq.rivernet.io/v1alpha1"
 kind: BrokerCluster
 metadata:
-  name: mybrokercluster
+  name: zwtest
   namespace : default
 spec:
   brokerImage: rivernet/rocketmq-broker:4.3.0-operator
@@ -12,3 +12,11 @@ spec:
   replicationMode: SYNC
   groupReplica: 2
   membersPerGroup: 2
+  nameSvrStorage:
+    dataDiskSize: 2Gi
+    fastMode: true
+  brokerStorage:
+    dataDiskSize: 1Gi
+    fastMode: true
+    
+    
