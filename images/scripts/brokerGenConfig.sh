@@ -22,7 +22,12 @@ function create_config() {
     echo "brokerClusterName=$CLUSTER_NAME" >> $BROKER_CONFIG_FILE
     echo "brokerName=$BROKER_NAME" >> $BROKER_CONFIG_FILE
     echo "brokerId=$BROKER_ID" >> $BROKER_CONFIG_FILE
+    echo "autoCreateTopicEnable=true" >> $BROKER_CONFIG_FILE
+    echo "flushDiskType=ASYNC_FLUSH" >> $BROKER_CONFIG_FILE
     echo "storePathRootDir=/opt/store" >> $BROKER_CONFIG_FILE
+    echo "storePathCommitLog=/opt/store/commitlog" >> $BROKER_CONFIG_FILE
+    echo "storePathIndex=/opt/store/index" >> $BROKER_CONFIG_FILE
+    echo "storePathConsumeQueue=/opt/store/consumequeue" >> $BROKER_CONFIG_FILE
     echo "deleteWhen=$DELETE_WHEN" >> $BROKER_CONFIG_FILE
     echo "fileReservedTime=$FILE_RESERVED_TIME" >> $BROKER_CONFIG_FILE
     echo "brokerRole=$BROKER_ROLE" >> $BROKER_CONFIG_FILE
