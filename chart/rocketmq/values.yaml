@@ -1,21 +1,89 @@
-# Default values for rocketmq.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
-replicaCount: 1
-image:
-  repository: nginx
-  tag: stable
-  pullPolicy: IfNotPresent
-service:
-  name: nginx
-  type: ClusterIP
-  externalPort: 80
-  internalPort: 80
-resources:
-  limits:
-    cpu: 100m
-    memory: 128Mi
-  requests:
-    cpu: 100m
-    memory: 128Mi
+isNewTemplate: true
 
+replicas:
+   name: "replicas"
+   description: "Replicas Config"
+   type: "string"
+   required: true
+   variables:
+     nameSrvReplica:
+       name: "numberOfNameSrv"
+       label: "number of nameserver"
+       description: "Number of nameserver"
+       required: true
+       value: 3
+       type: int
+     groupReplica:
+       name: "numberOfBrokerGroup"
+       label: "number of broker group"
+       description: "Number of broker group"
+       required: true
+       value: 2
+       type: int
+     membersPerGroup:
+       name: "membersPerBrokerGroup"
+       label: "member per broker group"
+       description: "Member per broker group"
+       required: true
+       value: 2
+       type: int
+
+nameSvrStorage:
+   name: "storage"
+   description: "NameSvr Persistent Storage"
+   type: "checkbox"
+   required: false
+   enabled: false
+   variables:
+     storagePool:
+       name: "storagePool"
+       label: "storagePool"
+       description: "storage pool for volume, use default pool if value is null"
+       required: false
+       value: ""
+       type: "string"
+     size:
+       name: "sizeRequest"
+       label: "storage(GB)"
+       description: "Storage, in GB. (1GB = 1024 MB)"
+       required: true
+       value: 1
+       type: "int"
+     type:
+       name: "volumeType"
+       label: "volume type"
+       description: "The type of volume"
+       required: true
+       value: "Normal"
+       selectValue: ["Normal", "Fast"]
+       type: "selectbox"
+
+brokerStorage:
+   name: "storage"
+   description: "Broker Persistent Storage"
+   type: "checkbox"
+   required: false
+   enabled: false
+   variables:
+     storagePool:
+       name: "storagePool"
+       label: "storagePool"
+       description: "storage pool for volume, use default pool if value is null"
+       required: false
+       value: ""
+       type: "string"
+     size:
+       name: "sizeRequest"
+       label: "storage(GB)"
+       description: "Storage, in GB. (1GB = 1024 MB)"
+       required: true
+       value: 1
+       type: "int"
+     type:
+       name: "volumeType"
+       label: "volume type"
+       description: "The type of volume"
+       required: true
+       value: "Normal"
+       selectValue: ["Normal", "Fast"]
+       type: "selectbox"
