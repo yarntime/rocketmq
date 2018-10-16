@@ -26,33 +26,12 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"path"
 	"strconv"
 	"strings"
 
 	"github.com/golang/glog"
 	"golang.org/x/net/http2"
 )
-
-// JoinPreservingTrailingSlash does a path.Join of the specified elements,
-// preserving any trailing slash on the last non-empty segment
-func JoinPreservingTrailingSlash(elem ...string) string {
-	// do the basic path join
-	result := path.Join(elem...)
-
-	// find the last non-empty segment
-	for i := len(elem) - 1; i >= 0; i-- {
-		if len(elem[i]) > 0 {
-			// if the last segment ended in a slash, ensure our result does as well
-			if strings.HasSuffix(elem[i], "/") && !strings.HasSuffix(result, "/") {
-				result += "/"
-			}
-			break
-		}
-	}
-
-	return result
-}
 
 // IsProbableEOF returns true if the given error resembles a connection termination
 // scenario that would justify assuming that the watch is empty.
@@ -61,9 +40,6 @@ func JoinPreservingTrailingSlash(elem ...string) string {
 // differentiate probable errors in connection behavior between normal "this is
 // disconnected" should use the method.
 func IsProbableEOF(err error) bool {
-	if err == nil {
-		return false
-	}
 	if uerr, ok := err.(*url.Error); ok {
 		err = uerr.Err
 	}
@@ -259,11 +235,8 @@ func isDefault(transportProxier func(*http.Request) (*url.URL, error)) bool {
 // NewProxierWithNoProxyCIDR constructs a Proxier function that respects CIDRs in NO_PROXY and delegates if
 // no matching CIDRs are found
 func NewProxierWithNoProxyCIDR(delegate func(req *http.Request) (*url.URL, error)) func(req *http.Request) (*url.URL, error) {
-	// we wrap the default method, so we only need to perform our check if the NO_PROXY (or no_proxy) envvar has a CIDR in it
+	// we wrap the default method, so we only need to perform our check if the NO_PROXY envvar has a CIDR in it
 	noProxyEnv := os.Getenv("NO_PROXY")
-	if noProxyEnv == "" {
-		noProxyEnv = os.Getenv("no_proxy")
-	}
 	noProxyRules := strings.Split(noProxyEnv, ",")
 
 	cidrs := []*net.IPNet{}
@@ -279,10 +252,17 @@ func NewProxierWithNoProxyCIDR(delegate func(req *http.Request) (*url.URL, error
 	}
 
 	return func(req *http.Request) (*url.URL, error) {
-		//change by huan begin
-		//ip := net.ParseIP(req.URL.Hostname())
-		ip := net.ParseIP(req.URL.Host)
-		//change by huan end
+		host := req.URL.Host
+		// for some urls, the Host is already the host, not the host:port
+		if net.ParseIP(host) == nil {
+			var err error
+			host, _, err = net.SplitHostPort(req.URL.Host)
+			if err != nil {
+				return delegate(req)
+			}
+		}
+
+		ip := net.ParseIP(host)
 		if ip == nil {
 			return delegate(req)
 		}
