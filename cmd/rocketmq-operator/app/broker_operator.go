@@ -60,7 +60,7 @@ func Run(s *operatoropts.OperatorOpts) error {
 	opClient := clientset.NewForConfigOrDie(kubeconfig)
 
 	// Shared informers (non namespace specific).
-	kubeInformerFactory := kubeinformers.NewFilteredSharedInformerFactory(kubeClient, resyncPeriod(s)(), s.Namespace, nil)
+	kubeInformerFactory := kubeinformers.NewSharedInformerFactory(kubeClient, resyncPeriod(s)())
 	operatorInformerFactory := informers.NewFilteredSharedInformerFactory(opClient, resyncPeriod(s)(), s.Namespace, nil)
 
 	var wg sync.WaitGroup

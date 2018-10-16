@@ -56,7 +56,7 @@ func NewService(ports []corev1.ServicePort, name string, labelName string, clust
 			Labels: map[string]string{
 				constants.BrokerClusterLabel: labelName,
 				constants.BrockerClusterName: cluster.Name,
-				"Release": cluster.Name,
+				"release": cluster.Name,
 			},
 			Namespace: cluster.Namespace,
 			OwnerReferences: []metav1.OwnerReference{
