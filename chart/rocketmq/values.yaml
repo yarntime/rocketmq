@@ -28,7 +28,7 @@ replicas:
        value: 2
        type: int
 
-nameSvrStorage:
+nameSvrPersistence:
    name: "storage"
    description: "NameSvr Persistent Storage"
    type: "checkbox"
@@ -58,7 +58,7 @@ nameSvrStorage:
        selectValue: ["Normal", "Fast"]
        type: "selectbox"
 
-brokerStorage:
+brokerPersistence:
    name: "storage"
    description: "Broker Persistent Storage"
    type: "checkbox"

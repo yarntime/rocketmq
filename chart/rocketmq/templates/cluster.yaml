@@ -10,11 +10,11 @@ metadata:
 spec:
   brokerImage: rivernet/rocketmq-broker:4.3.0-operator
   nameSvrImage: rivernet/rocketmq-namesrv:4.3.0-k8s
-  nameSrvReplica: {{ .Values.replica.variables.nameSvr.value }}
+  nameSrvReplica: {{ .Values.replicas.variables.nameSrvReplica.value }}
   allMaster: false
   replicationMode: SYNC
-  groupReplica:  {{ .Values.replica.variables.group.value }}
-  membersPerGroup: {{ .Values.replica.variables.membersPerGroup.value }}
+  groupReplica:  {{ .Values.replicas.variables.groupReplica.value }}
+  membersPerGroup: {{ .Values.replicas.variables.membersPerGroup.value }}
 {{- if .Values.nameSvrPersistence.enabled }}
   nameSvrStorage:
     dataDiskSize: {{ .Values.nameSvrPersistence.variables.size.value }}Gi

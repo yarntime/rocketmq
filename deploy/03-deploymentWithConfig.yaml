@@ -37,7 +37,7 @@ spec:
       containers:
       - name: rocketmq-operator-controller
         imagePullPolicy: IfNotPresent
-        image: huanwei/rocketmq-operator:0.1
+        image: rivernet/rocketmq-operator:0.1
         ports:
         - containerPort: 10254
         volumeMounts:
@@ -45,4 +45,3 @@ spec:
           mountPath: /etc/rocketmq-operator
         args:
           - --v=4
-          - --namespace=kube-system
