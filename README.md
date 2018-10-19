@@ -19,7 +19,7 @@ The RoecketMQ Operator provides following key features:
 
 ## Prerequisites 
 
-* Kubernetes 1.9+, since StatefulSets are stable (GA) in 1.9.
+* Kubernetes 1.7+.
 
 ## Contributing 
 
