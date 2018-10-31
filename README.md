@@ -1,4 +1,4 @@
-Forked from https://github.com/huanwei/rocketmq-operator
+Refrence: https://github.com/huanwei/rocketmq-operator
 
 # RocketMQ Operator
 
